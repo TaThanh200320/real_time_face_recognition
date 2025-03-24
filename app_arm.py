@@ -50,7 +50,12 @@ class RTSPFaceRecognition:
         if frame is None:
             return frame
         
+        start_time = time.time()
+        
         faces = self.app.get(frame)
+        
+        inference_time = time.time() - start_time
+        self.fps = 1.0 / inference_time if inference_time > 0 else 0
         
         for face in faces:
             bbox = face.bbox.astype(np.int32)
@@ -73,9 +78,6 @@ class RTSPFaceRecognition:
             print(f"Cannot open rtsp: {self.rtsp_url}")
             return
         
-        prev_time = time.time()
-        frame_count = 0
-        
         while self.running:
             ret, frame = cap.read()
             if not ret:
@@ -86,12 +88,6 @@ class RTSPFaceRecognition:
                 continue
             
             frame = cv2.resize(frame, (640, 480))
-            frame_count += 1
-            current_time = time.time()
-            if current_time - prev_time >= 1.0:
-                self.fps = frame_count / (current_time - prev_time)
-                frame_count = 0
-                prev_time = current_time
             self.frame_queue.append(frame.copy())
         
         cap.release()
