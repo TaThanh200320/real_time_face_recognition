@@ -21,6 +21,8 @@ class RTSPFaceRecognition:
         
         self.running = False
         self.frame_queue = deque(maxlen=10)
+        self.frame_count = 0
+        self.fps_start_time = time.monotonic()
         self.fps = 0
         
     def _load_face_database(self):
@@ -49,13 +51,16 @@ class RTSPFaceRecognition:
     def _process_frame(self, frame):
         if frame is None:
             return frame
-        
-        start_time = time.time()
-        
+
         faces = self.app.get(frame)
+        self.frame_count += 1
+        current_time = time.monotonic()
+        elapsed_time = current_time - self.fps_start_time
         
-        inference_time = time.time() - start_time
-        self.fps = 1.0 / inference_time if inference_time > 0 else 0
+        if elapsed_time > 1.0:
+            self.fps = self.frame_count / elapsed_time
+            self.frame_count = 0
+            self.fps_start_time = current_time
         
         for face in faces:
             bbox = face.bbox.astype(np.int32)
