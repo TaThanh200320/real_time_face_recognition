@@ -11,7 +11,6 @@ def create_face_database_from_directory(db_directory, output_path):
     
     for person_dir in os.listdir(db_directory):
         person_path = os.path.join(db_directory, person_dir)
-        
         if not os.path.isdir(person_path):
             continue
         
@@ -22,7 +21,6 @@ def create_face_database_from_directory(db_directory, output_path):
                 continue
                 
             img_path = os.path.join(person_path, image_file)
-            
             try:
                 img = cv2.imread(img_path)
                 if img is None:
@@ -55,5 +53,5 @@ def create_face_database_from_directory(db_directory, output_path):
 
 if __name__ == '__main__':
     db_directory = "db"
-    num_faces = create_face_database_from_directory(db_directory, "face_database.npy")
+    num_faces = create_face_database_from_directory(db_directory, "face_database_arm.npy")
     print(f"Done! Added a total of {num_faces} faces to the database.")

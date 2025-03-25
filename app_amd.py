@@ -52,6 +52,7 @@ class RTSPFaceRecognition:
         if frame is None:
             return frame
         
+        start_time = time.monotonic()
         faces = self.app.get(frame)
         self.frame_count += 1
         current_time = time.monotonic()
@@ -74,6 +75,10 @@ class RTSPFaceRecognition:
         
         cv2.putText(frame, f"FPS: {self.fps:.2f}", (10, 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        
+        end_time = time.monotonic()
+        processing_time = end_time - start_time
+        print(f"Processing time for frame: {processing_time:.4f} seconds")
         
         return frame
     

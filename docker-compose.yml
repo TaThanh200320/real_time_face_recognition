@@ -1,0 +1,17 @@
+services:
+  face-recognition:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: xxtkidxx/face-recognition
+    container_name: face-recognition
+    restart: always
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ./:/app
+    runtime: nvidia
+    tty: true
+    stdin_open: true

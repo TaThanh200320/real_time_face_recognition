@@ -4,6 +4,7 @@ import numpy as np
 from insightface.app import FaceAnalysis
 import threading
 from collections import deque
+import os
 
 class RTSPFaceRecognition:
     def __init__(self, rtsp_url, threshold=0.5, face_db_path=None):
@@ -18,13 +19,15 @@ class RTSPFaceRecognition:
         self.known_names = []
         if self.face_db_path:
             self._load_face_database()
-        
         self.running = False
         self.frame_queue = deque(maxlen=10)
         self.frame_count = 0
         self.fps_start_time = time.monotonic()
         self.fps = 0
-        
+        self.output_dir = "output_frames"
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+
     def _load_face_database(self):
         try:
             database = np.load(self.face_db_path, allow_pickle=True).item()
@@ -52,6 +55,7 @@ class RTSPFaceRecognition:
         if frame is None:
             return frame
 
+        start_time = time.monotonic()
         faces = self.app.get(frame)
         self.frame_count += 1
         current_time = time.monotonic()
@@ -74,6 +78,10 @@ class RTSPFaceRecognition:
         
         cv2.putText(frame, f"FPS: {self.fps:.2f}", (10, 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        
+        end_time = time.monotonic()
+        processing_time = end_time - start_time
+        print(f"Processing time for frame: {processing_time:.4f} seconds")
         
         return frame
     
@@ -98,6 +106,7 @@ class RTSPFaceRecognition:
         cap.release()
     
     def _display_frames(self):
+        frame_index = 0
         while self.running:
             if not self.frame_queue:
                 time.sleep(0.01)
@@ -106,10 +115,10 @@ class RTSPFaceRecognition:
             frame = self.frame_queue.popleft()
             processed_frame = self._process_frame(frame)
             
-            cv2.imshow("Face Recognition", processed_frame)
-            
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                self.running = False
+            output_path = os.path.join(self.output_dir, f"frame_{frame_index:06d}.jpg")
+            cv2.imwrite(output_path, processed_frame)
+            print(f"Saved frame to {output_path}")
+            frame_index += 1
     
     def start(self):
         self.running = True
@@ -126,7 +135,6 @@ class RTSPFaceRecognition:
         
         capture_thread.join()
         display_thread.join()
-        cv2.destroyAllWindows()
 
 if __name__ == "__main__":  
     rtsp_url = "rtsp://admin:Stc@vielina.com@192.168.8.193:554/Streaming/channels/101"
